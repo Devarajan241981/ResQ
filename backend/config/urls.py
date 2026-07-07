@@ -23,6 +23,12 @@ api_v1_patterns = [
     path("ngos/", include("apps.ngos.urls")),
     path("shelters/", include("apps.shelters.urls")),
     path("notifications/", include("apps.notifications.urls")),
+    path("police/", include("apps.police.urls")),
+    path("maps/", include("apps.maps.urls")),
+    path("search/", include("apps.search.urls")),
+    path("media/", include("apps.media.urls")),
+    path("analytics/", include("apps.analytics.urls")),
+    path("audit-logs/", include("apps.audit_logs.urls")),
 ]
 
 urlpatterns = [

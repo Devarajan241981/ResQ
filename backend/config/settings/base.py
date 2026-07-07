@@ -41,12 +41,15 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "apps.common",
+    "apps.audit_logs",
     "apps.accounts",
     "apps.notifications",
     "apps.hospitals",
     "apps.volunteers",
     "apps.shelters",
     "apps.ngos",
+    "apps.organizations",
+    "apps.police",
     "apps.missing_persons",
     "apps.missing_children",
     "apps.missing_elderly",
@@ -56,6 +59,10 @@ LOCAL_APPS = [
     "apps.disaster_mode",
     "apps.sos",
     "apps.ai_matching",
+    "apps.maps",
+    "apps.search",
+    "apps.media",
+    "apps.analytics",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -182,6 +189,7 @@ REST_FRAMEWORK = {
         "auth": "10/min",
         "otp": "5/min",
         "report-create": "20/min",
+        "maps": "60/min",
     },
     "EXCEPTION_HANDLER": "apps.common.exceptions.api_exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
@@ -208,6 +216,9 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:3000"])
 
 FRONTEND_BASE_URL = env("FRONTEND_BASE_URL", default="http://localhost:3000")
+
+ORS_API_KEY = env("ORS_API_KEY", default="")
+ORS_BASE_URL = env("ORS_BASE_URL", default="https://api.openrouteservice.org")
 
 GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
 

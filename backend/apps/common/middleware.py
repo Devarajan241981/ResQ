@@ -49,7 +49,7 @@ class AuditLogMiddleware:
 
     @staticmethod
     def _record(request, response):
-        from apps.common.models import AuditLog
+        from apps.audit_logs.models import AuditLog
 
         user = getattr(request, "user", None)
         try:

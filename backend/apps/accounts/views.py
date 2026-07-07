@@ -142,10 +142,15 @@ class DeviceSessionViewSet(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            from apps.accounts.models import DeviceSession
+
+            return DeviceSession.objects.none()
         return self.request.user.device_sessions.filter(is_active=True)
 
 
 class DeviceSessionRevokeView(APIView):
+    serializer_class = None
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, session_id):
