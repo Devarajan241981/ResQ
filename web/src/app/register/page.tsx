@@ -1,10 +1,10 @@
-import { RegisterForm } from "@/components/auth/register-form";
+import { RegisterWizard } from "@/components/auth/register-wizard";
 import { PageContainer } from "@/components/page-container";
 
 export default function RegisterPage() {
   return (
     <PageContainer>
-      <RegisterForm />
+      <RegisterWizard />
     </PageContainer>
   );
 }

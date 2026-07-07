@@ -25,6 +25,49 @@ def test_register_creates_user_and_returns_tokens(api_client):
     assert User.objects.filter(email="new@example.com").exists()
 
 
+def test_register_with_gender_and_blood_group_creates_donor_profile(api_client):
+    from apps.blood_donation.models import DonorProfile
+
+    resp = api_client.post(
+        reverse("accounts:register"),
+        {
+            "full_name": "Donor Citizen",
+            "email": "donor@example.com",
+            "phone": "+919876000009",
+            "password": "StrongPass123!",
+            "gender": "female",
+            "city": "Bengaluru",
+            "blood_group": "O+",
+        },
+    )
+    assert resp.status_code == 201
+    user = User.objects.get(email="donor@example.com")
+    assert user.gender == "female"
+    assert user.city == "Bengaluru"
+
+    donor = DonorProfile.objects.get(user=user)
+    assert donor.blood_group == "O+"
+    assert donor.city == "Bengaluru"
+    assert donor.is_available is True
+
+
+def test_register_without_blood_group_does_not_create_donor_profile(api_client):
+    from apps.blood_donation.models import DonorProfile
+
+    resp = api_client.post(
+        reverse("accounts:register"),
+        {
+            "full_name": "No Donor",
+            "email": "nodonor@example.com",
+            "phone": "+919876000008",
+            "password": "StrongPass123!",
+        },
+    )
+    assert resp.status_code == 201
+    user = User.objects.get(email="nodonor@example.com")
+    assert not DonorProfile.objects.filter(user=user).exists()
+
+
 def test_register_rejects_privileged_role(api_client):
     url = reverse("accounts:register")
     resp = api_client.post(

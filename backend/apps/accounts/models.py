@@ -7,6 +7,12 @@ from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 
 
+class Gender(models.TextChoices):
+    MALE = "male", "Male"
+    FEMALE = "female", "Female"
+    OTHER = "other", "Other"
+
+
 class Role(models.TextChoices):
     CITIZEN = "citizen", "Citizen"
     VOLUNTEER = "volunteer", "Volunteer"
@@ -61,6 +67,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     preferred_language = models.CharField(max_length=10, default="en")
     profile_photo = models.ImageField(upload_to="profiles/", null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=Gender.choices, blank=True)
+    city = models.CharField(max_length=100, blank=True, db_index=True)
 
     google_sub = models.CharField(max_length=255, blank=True, unique=False, null=True)
 

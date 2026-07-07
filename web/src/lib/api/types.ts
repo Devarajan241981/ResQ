@@ -7,6 +7,8 @@ export type Role =
   | "admin"
   | "super_admin";
 
+export type Gender = "male" | "female" | "other";
+
 export interface User {
   id: string;
   full_name: string;
@@ -16,6 +18,8 @@ export interface User {
   is_verified: boolean;
   preferred_language: string;
   profile_photo: string | null;
+  gender: Gender | "";
+  city: string;
   date_joined: string;
 }
 
@@ -26,7 +30,6 @@ export interface AuthResponse {
 }
 
 export type MissingPersonStatus = "missing" | "verified" | "found" | "closed";
-export type Gender = "male" | "female" | "other";
 
 export interface MissingPersonPhoto {
   id: string;

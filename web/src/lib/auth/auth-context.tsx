@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { apiFetch, ApiError, type RequestOptions } from "@/lib/api/client";
-import type { AuthResponse, User } from "@/lib/api/types";
+import type { AuthResponse, BloodGroup, Gender, User } from "@/lib/api/types";
 import * as tokenStorage from "./token-storage";
 
 export interface RegisterInput {
@@ -19,6 +19,9 @@ export interface RegisterInput {
   phone: string;
   password: string;
   preferred_language?: string;
+  gender?: Gender;
+  city?: string;
+  blood_group?: BloodGroup;
 }
 
 interface AuthContextValue {

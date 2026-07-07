@@ -1,22 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
-import {
-  Ambulance,
-  Baby,
-  Building2,
-  Droplet,
-  HandHeart,
-  HeartPulse,
-  Hospital,
-  PawPrint,
-  Siren,
-  Tent,
-  TriangleAlert,
-  UserSearch,
-} from "lucide-react";
-import type { ComponentType } from "react";
+import { PHOTOS } from "@/lib/media/stock-photos";
 
 interface ModuleInfo {
-  icon: ComponentType<{ className?: string }>;
+  photo: string;
   title: string;
   description: string;
   href?: string;
@@ -25,82 +12,121 @@ interface ModuleInfo {
 
 const MODULES: ModuleInfo[] = [
   {
-    icon: UserSearch,
+    photo: PHOTOS.missingPersons,
     title: "Missing Persons",
     description: "Report, share via QR code, and track sighting reports with AI-assisted risk scoring.",
     href: "/missing-persons",
     live: true,
   },
   {
-    icon: Siren,
+    photo: PHOTOS.sos,
     title: "SOS",
     description: "One-tap emergency alert with live location to trusted contacts and nearby volunteers.",
     href: "/sos",
     live: true,
   },
   {
-    icon: Droplet,
+    photo: PHOTOS.bloodDonation,
     title: "Blood Donation",
     description: "Post an emergency blood request or find nearby donors by blood group and city.",
     href: "/blood-donation",
     live: true,
   },
   {
-    icon: TriangleAlert,
+    photo: PHOTOS.disasterMode,
     title: "Disaster Mode",
     description: "Mark yourself safe, or request rescue, food, water, or medicine during active disasters.",
     href: "/disaster-mode",
     live: true,
   },
   {
-    icon: Baby,
+    photo: PHOTOS.missingChildren,
     title: "Missing Children",
     description: "A dedicated workflow with extra verification and priority alerts for child safety cases.",
     live: false,
   },
   {
-    icon: HeartPulse,
+    photo: PHOTOS.missingElderly,
     title: "Missing Elderly",
     description: "Support for dementia and Alzheimer's cases, with a large emergency button and medical history.",
     live: false,
   },
   {
-    icon: PawPrint,
+    photo: PHOTOS.lostPets,
     title: "Lost Pets",
     description: "Upload photos and details of a lost pet; nearby shelters and vets can respond directly.",
     live: false,
   },
   {
-    icon: Hospital,
+    photo: PHOTOS.hospitals,
     title: "Hospital Directory",
     description: "Find emergency, trauma, government, and private hospitals with live navigation and calling.",
     live: false,
   },
   {
-    icon: Ambulance,
+    photo: PHOTOS.ambulance,
     title: "Ambulance",
     description: "Request an ambulance and track status, with nearby provider notification.",
     live: false,
   },
   {
-    icon: HandHeart,
+    photo: PHOTOS.volunteers,
     title: "Nearby Volunteers",
     description: "Verified volunteers by skill — medical, search & rescue, animal rescue, transport.",
     live: false,
   },
   {
-    icon: Building2,
+    photo: PHOTOS.ngos,
     title: "NGOs",
     description: "Verified NGO dashboards to accept, update, and close community assistance cases.",
     live: false,
   },
   {
-    icon: Tent,
+    photo: PHOTOS.shelters,
     title: "Shelter Finder",
     description: "Government, NGO, and temporary shelters with live capacity and contact details.",
     live: false,
   },
 ];
+
+function ModuleCard({ mod }: { mod: ModuleInfo }) {
+  const card = (
+    <div className="group relative aspect-[4/5] overflow-hidden rounded-xl">
+      <Image
+        src={mod.photo}
+        alt=""
+        fill
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        className={`object-cover transition-transform duration-500 ${mod.live ? "group-hover:scale-105" : "grayscale"}`}
+      />
+      <div
+        aria-hidden
+        className={`absolute inset-0 bg-gradient-to-t ${mod.live ? "from-black/90 via-black/20 to-transparent" : "from-black/85 via-black/40 to-black/10"}`}
+      />
+
+      <span
+        className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold ${
+          mod.live ? "bg-green-500 text-white" : "bg-white/90 text-black"
+        }`}
+      >
+        {mod.live ? "Live" : "Coming soon"}
+      </span>
+
+      <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+        <h3 className="font-bold">{mod.title}</h3>
+        <p className="mt-1 text-sm text-white/80">{mod.description}</p>
+      </div>
+    </div>
+  );
+
+  return mod.href ? (
+    <Link href={mod.href} className="block">
+      {card}
+    </Link>
+  ) : (
+    card
+  );
+}
 
 export function ModulesShowcase() {
   return (
@@ -114,43 +140,9 @@ export function ModulesShowcase() {
       </div>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {MODULES.map((mod) => {
-          const Icon = mod.icon;
-          const content = (
-            <>
-              <div className="flex items-start justify-between">
-                <div className="rounded-lg bg-surface p-2.5">
-                  <Icon className="h-5 w-5" />
-                </div>
-                {mod.live ? (
-                  <span className="rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-600">
-                    Live
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-gray-500/10 px-2.5 py-0.5 text-xs font-medium text-foreground/50">
-                    Coming soon
-                  </span>
-                )}
-              </div>
-              <h3 className="mt-4 font-semibold">{mod.title}</h3>
-              <p className="mt-1 text-sm text-foreground/70">{mod.description}</p>
-            </>
-          );
-
-          const className =
-            "rounded-xl border border-border p-5 transition-colors" +
-            (mod.live ? " hover:bg-surface" : " opacity-80");
-
-          return mod.href ? (
-            <Link key={mod.title} href={mod.href} className={className}>
-              {content}
-            </Link>
-          ) : (
-            <div key={mod.title} className={className}>
-              {content}
-            </div>
-          );
-        })}
+        {MODULES.map((mod) => (
+          <ModuleCard key={mod.title} mod={mod} />
+        ))}
       </div>
     </section>
   );
