@@ -29,7 +29,7 @@ class MissingPersonReportViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == "create":
             return [permissions.IsAuthenticated(), IsVerifiedReporter()]
-        if self.action in ("update", "partial_update", "destroy"):
+        if self.action in ("update", "partial_update", "destroy", "update_status"):
             return [permissions.IsAuthenticated(), IsOwnerOrReadOnly()]
         return [permissions.IsAuthenticated()]
 
@@ -60,7 +60,7 @@ class MissingPersonReportViewSet(viewsets.ModelViewSet):
         photo = services.add_photo(report, image)
         return Response(MissingPersonPhotoSerializer(photo).data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["post"], url_path="sightings", permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=["post"], url_path="sightings")
     def add_sighting(self, request, pk=None):
         report = self.get_object()
         serializer = SightingReportSerializer(data=request.data)
@@ -68,7 +68,7 @@ class MissingPersonReportViewSet(viewsets.ModelViewSet):
         sighting = services.add_sighting(report, request.user, serializer.validated_data)
         return Response(SightingReportSerializer(sighting).data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=["patch"], url_path="status", permission_classes=[permissions.IsAuthenticated, IsOwnerOrReadOnly])
+    @action(detail=True, methods=["patch"], url_path="status")
     def update_status(self, request, pk=None):
         report = self.get_object()
         serializer = MissingPersonStatusUpdateSerializer(data=request.data)
