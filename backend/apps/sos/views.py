@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
 from apps.sos import selectors, services
-from apps.sos.models import SOSAlert, SOSLocationPing, SOSStatus, TrustedContact
+from apps.sos.models import SOSAlert, SOSStatus, TrustedContact
 from apps.sos.serializers import SOSAlertSerializer, SOSLocationPingSerializer, TrustedContactSerializer
 
 

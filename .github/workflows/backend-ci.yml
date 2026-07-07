@@ -1,0 +1,106 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check .
+
+  native-engine-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential pkg-config \
+            libjpeg62-turbo-dev libpng-dev libssl-dev libqrencode-dev
+      - name: Build native_engine
+        working-directory: backend/native_engine
+        run: |
+          mkdir -p build && cd build
+          cmake ..
+          make -j"$(nproc)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libresq_native
+          path: backend/native_engine/build/libresq_native.so
+
+  test:
+    runs-on: ubuntu-latest
+    needs: native-engine-build
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: resq
+          POSTGRES_PASSWORD: resq
+          POSTGRES_DB: resq_india_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U resq"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      DATABASE_URL: postgres://resq:resq@localhost:5432/resq_india_test
+      REDIS_URL: redis://localhost:6379/0
+      DJANGO_SECRET_KEY: ci-test-secret-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/requirements/dev.txt
+      - run: pip install -r requirements/dev.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: libresq_native
+          path: backend/native_engine/build
+      - name: Django system check
+        run: python manage.py check
+      - name: Check for missing migrations
+        run: python manage.py makemigrations --check --dry-run
+      - name: Run test suite
+        run: pytest --cov=apps --cov-report=term-missing
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: false
+          tags: resq-backend:ci

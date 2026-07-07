@@ -1,6 +1,6 @@
 """Read-only queries for blood_donation. No mutation happens here — see services.py for writes."""
-from apps.common.geo import filter_within_radius
 from apps.blood_donation.models import DonorProfile
+from apps.common.geo import filter_within_radius
 
 
 def get_nearby_available_donors(queryset, lat: float, lng: float, radius_km: float):

@@ -1,0 +1,11 @@
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+exclude = ["*/migrations/*", ".venv", "native_engine"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"config/settings/*.py" = ["F403", "F405"]

@@ -89,7 +89,7 @@ def test_me_endpoint_returns_current_user(auth_client, user):
 
 
 def test_register_creates_device_session(api_client):
-    resp = api_client.post(
+    api_client.post(
         reverse("accounts:register"),
         {
             "full_name": "Session User",

@@ -27,6 +27,7 @@ mobile/.flutter-plugins-dependencies
 .DS_Store
 .vscode/
 .idea/
+.claude/
 
 # Native engine build artifacts
 backend/native_engine/build/

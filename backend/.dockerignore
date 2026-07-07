@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.git/
+media/
+staticfiles/
+native_engine/build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
