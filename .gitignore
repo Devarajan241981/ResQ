@@ -28,6 +28,9 @@ mobile/.flutter-plugins-dependencies
 .vscode/
 .idea/
 
+# Native engine build artifacts
+backend/native_engine/build/
+
 # Test / coverage
 .coverage
 htmlcov/
