@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: "/sos", key: "nav.sos" } as const,
   { href: "/blood-donation", key: "nav.bloodDonation" } as const,
   { href: "/disaster-mode", key: "nav.disasterMode" } as const,
+  { href: "/about", key: "nav.about" } as const,
 ];
 
 export function Navbar() {
@@ -21,7 +22,7 @@ export function Navbar() {
     <header className="border-b border-border">
       <nav
         aria-label="Main navigation"
-        className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3"
+        className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3"
       >
         <Link href="/" className="text-lg font-semibold">
           {t("home.title")}
