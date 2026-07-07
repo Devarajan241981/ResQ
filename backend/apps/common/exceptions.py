@@ -35,7 +35,14 @@ def api_exception_handler(exc, context):
         return Response({"detail": exc.message, "code": exc.__class__.__name__}, status=exc.status_code)
 
     if response is not None:
-        response.data = {"detail": response.data, "code": exc.__class__.__name__}
+        # DRF's default body is already either {"detail": "..."} (permission/auth/
+        # not-found errors) or {"field": ["..."]} (serializer validation errors).
+        # Annotate with an error code instead of re-wrapping it under a new
+        # "detail" key, which would double-nest the former and shadow the latter.
+        if isinstance(response.data, dict):
+            response.data = {**response.data, "code": exc.__class__.__name__}
+        else:
+            response.data = {"detail": response.data, "code": exc.__class__.__name__}
         return response
 
     logger.exception("Unhandled exception in %s", context.get("view"))

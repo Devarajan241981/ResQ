@@ -29,6 +29,12 @@ def test_create_report_requires_verified_reporter(make_auth_client, unverified_u
     client = make_auth_client(unverified_user)
     resp = client.post(url("missing-person-list"), _report_payload(), format="multipart")
     assert resp.status_code == 403
+    # Regression check: apps.common.exceptions.api_exception_handler must not
+    # double-nest DRF's own {"detail": "..."} shape under a second "detail"
+    # key — a real bug caught via the Next.js frontend showing "PermissionDenied"
+    # (the error code) instead of the actual message.
+    assert isinstance(resp.data["detail"], str)
+    assert resp.data["code"] == "PermissionDenied"
 
 
 def test_create_report_generates_qr_and_risk_score(auth_client):

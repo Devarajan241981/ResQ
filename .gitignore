@@ -28,6 +28,7 @@ mobile/.flutter-plugins-dependencies
 .vscode/
 .idea/
 .claude/
+.playwright-mcp/
 
 # Native engine build artifacts
 backend/native_engine/build/

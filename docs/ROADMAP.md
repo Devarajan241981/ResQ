@@ -54,16 +54,35 @@ non-ML stand-in:
 - Duplicate detection: exact name+age match within a time window (`missing_persons/selectors.py`) — not fuzzy/embedding-based yet.
 - Regional language translation, image enhancement, automatic report summarization: interfaces defined, no backend wired.
 
+## Web application (Next.js)
+
+**Built**: auth (email/password + phone OTP, JWT with refresh-on-401),
+dark mode, i18n scaffold (English + Hindi fully translated, 8 more Indian
+languages selectable but falling back to English), and the four
+fully-built backend modules end-to-end — missing persons (report, list,
+public share page), SOS (real geolocation, trusted contacts), blood
+donation (list, respond, post), disaster mode (active events, status
+reporting). 49 passing tests (Vitest + React Testing Library), verified
+against the live Django backend in an actual browser — see
+[`web/README.md`](../web/README.md) for specifics, including two real bugs
+(one frontend, one backend) that surfaced during that verification and
+were fixed with regression tests on both sides.
+
+**Not built**: Google Sign-In UI, hospitals/volunteers/shelters/police/maps/
+search browsing UI, any of the scaffolded modules (missing children/
+elderly, lost pets, ambulance, NGOs), account settings/profile editing,
+notification center UI (the backend model + API exists, no frontend calls
+it yet).
+
 ## Platform surfaces not yet started
 
-- **Next.js web application** (citizen-facing + family dashboard)
 - **Flutter mobile app** (Android/iOS)
 - **Admin Dashboard** (separate frontend consuming the existing Django admin + `/api/v1/analytics/`, `/api/v1/audit-logs/`)
 - **Super Admin Dashboard**
 
-These were deliberately sequenced after the backend per the "backend-first"
-build order — the API surface, auth, and data model needed to be solid
-before building three more frontends against it.
+These were deliberately sequenced after the backend (and now the web app)
+per the "backend-first" build order — the API surface, auth, and data
+model needed to be solid before building against it repeatedly.
 
 ## Infra / DevOps
 

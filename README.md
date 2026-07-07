@@ -8,10 +8,11 @@ location, and volunteer/NGO coordination — built for real-time community
 response, not just a CRUD app.
 
 **Current state**: the backend is built, tested, containerized, and CI'd.
-The Next.js web app, Flutter mobile app, and admin/super-admin dashboards
-have not been started yet (see [`docs/ROADMAP.md`](docs/ROADMAP.md) for
-exactly what's implemented vs. scaffolded vs. not started, module by
-module).
+The Next.js web app covers the four fully-built modules end-to-end (auth,
+missing persons, SOS, blood donation, disaster mode) with 49 passing tests.
+The Flutter mobile app and admin/super-admin dashboards have not been
+started yet (see [`docs/ROADMAP.md`](docs/ROADMAP.md) for exactly what's
+implemented vs. scaffolded vs. not started, module by module).
 
 ## Tech stack
 
@@ -26,15 +27,17 @@ module).
 | Storage | Local disk (dev) / S3-compatible via `django-storages` + `boto3` (prod) |
 | API docs | drf-spectacular (OpenAPI 3 / Swagger / ReDoc) |
 | Native performance | Standalone C library (CMake) for geo math, image encode, QR batch rendering, crypto — see [`backend/native_engine/README.md`](backend/native_engine/README.md) |
-| Tests | pytest + pytest-django + factory_boy |
+| Tests | pytest + pytest-django + factory_boy (backend), Vitest + React Testing Library (web) |
 | Containers | Docker (multi-stage, builds the native engine in-image) + docker-compose |
 | CI | GitHub Actions (lint, native build, tests against real Postgres/Redis, Docker build) |
+| Web frontend | Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 |
 
 ## Repository layout
 
 ```
 ResQ/
   backend/                  Django project (see below)
+  web/                      Next.js web app (see web/README.md)
   docs/
     ROADMAP.md              What's implemented vs. scaffolded vs. not started
     ARCHITECTURE.md          DDD layering, request/auth flow diagrams
@@ -116,15 +119,34 @@ cd native_engine
 mkdir -p build && cd build && cmake .. && make
 ```
 
+## Quickstart (web app)
+
+```bash
+cd web
+cp .env.local.example .env.local   # point NEXT_PUBLIC_API_URL at the backend above
+npm install
+npm run dev
+```
+
+Open http://localhost:3000 — requires the Django backend (above) running.
+See [`web/README.md`](web/README.md) for what's implemented.
+
 ## Running tests
 
 ```bash
+# Backend
 cd backend
 source .venv/bin/activate
 ruff check .
 pytest                       # 40 tests: auth, missing persons, SOS,
                               # blood donation, disaster mode, native engine
 python native_engine/tests/benchmark.py   # native vs. Python, real numbers
+
+# Web
+cd web
+npm run lint
+npm test                     # 49 tests, one *.test.tsx per component
+npm run build
 ```
 
 ## Where to go next
