@@ -88,3 +88,14 @@ class SightingReport(BaseModel, GeoLocationMixin):
 
     class Meta:
         ordering = ["-sighted_at"]
+
+
+class ReportComment(BaseModel):
+    """Public discussion under a missing-person post (Instagram-style comments)."""
+
+    report = models.ForeignKey(MissingPersonReport, on_delete=models.CASCADE, related_name="comments")
+    author = models.ForeignKey("accounts.User", on_delete=models.CASCADE, related_name="report_comments")
+    content = models.TextField(max_length=1000)
+
+    class Meta:
+        ordering = ["created_at"]

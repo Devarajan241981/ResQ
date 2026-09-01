@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ReportForm } from "./report-form";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 import * as tokenStorage from "@/lib/auth/token-storage";
 
 const pushMock = vi.fn();
@@ -38,9 +39,11 @@ function renderForm() {
   fetchMock.mockResolvedValueOnce(jsonResponse(mockUser));
 
   return render(
-    <AuthProvider>
-      <ReportForm />
-    </AuthProvider>,
+    <LanguageProvider>
+      <AuthProvider>
+        <ReportForm />
+      </AuthProvider>
+    </LanguageProvider>,
   );
 }
 

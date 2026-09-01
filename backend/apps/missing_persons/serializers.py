@@ -4,6 +4,7 @@ from apps.missing_persons.models import (
     EmergencyContact,
     MissingPersonPhoto,
     MissingPersonReport,
+    ReportComment,
     SightingReport,
 )
 from apps.missing_persons.services import public_share_url
@@ -98,6 +99,7 @@ class PublicMissingPersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = MissingPersonReport
         fields = (
+            "id",
             "public_slug",
             "name",
             "age",
@@ -113,3 +115,12 @@ class PublicMissingPersonSerializer(serializers.ModelSerializer):
 
 class MissingPersonStatusUpdateSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=MissingPersonReport._meta.get_field("status").choices)
+
+
+class ReportCommentSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source="author.full_name", read_only=True)
+
+    class Meta:
+        model = ReportComment
+        fields = ("id", "author", "author_name", "content", "created_at")
+        read_only_fields = ("id", "author", "author_name", "created_at")

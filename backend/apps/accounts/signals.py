@@ -20,6 +20,8 @@ def send_welcome_notification(sender, instance, created, **kwargs):
     notify_user(
         instance,
         NotificationType.SYSTEM,
-        title="Welcome to ResQ India",
+        title="Welcome to ResQ Bharath",
         body="Your account is ready. Verify your phone to unlock reporting features.",
+        # Lets the client deep-link this notification to the phone-verification page.
+        data={"action": "verify_phone"},
     )

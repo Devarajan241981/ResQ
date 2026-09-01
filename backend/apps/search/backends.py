@@ -26,6 +26,7 @@ class PostgresSearchBackend(SearchBackend):
                 {
                     "type": "missing_person",
                     "id": str(report.id),
+                    "public_slug": report.public_slug,
                     "title": report.name,
                     "subtitle": report.last_seen_location,
                     "status": report.status,
@@ -36,6 +37,7 @@ class PostgresSearchBackend(SearchBackend):
                 {
                     "type": "missing_child",
                     "id": str(report.id),
+                    "public_slug": getattr(report, "public_slug", ""),
                     "title": report.name,
                     "subtitle": report.last_seen_location,
                     "status": report.status,
@@ -46,6 +48,7 @@ class PostgresSearchBackend(SearchBackend):
                 {
                     "type": "missing_elderly",
                     "id": str(report.id),
+                    "public_slug": getattr(report, "public_slug", ""),
                     "title": report.name,
                     "subtitle": report.last_seen_location,
                     "status": report.status,
@@ -56,6 +59,7 @@ class PostgresSearchBackend(SearchBackend):
                 {
                     "type": "lost_pet",
                     "id": str(report.id),
+                    "public_slug": getattr(report, "public_slug", ""),
                     "title": report.pet_name or report.species,
                     "subtitle": report.last_seen_location,
                     "status": report.status,

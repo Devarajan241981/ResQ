@@ -26,6 +26,16 @@ class NotEligibleError(DomainError):
     status_code = 403
 
 
+class CapacityExceededError(DomainError):
+    default_message = "This campaign has no open slots left."
+    status_code = 409
+
+
+class AlreadyRegisteredError(DomainError):
+    default_message = "You are already registered for this campaign."
+    status_code = 409
+
+
 def api_exception_handler(exc, context):
     response = exception_handler(exc, context)
 

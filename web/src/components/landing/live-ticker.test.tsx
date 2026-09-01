@@ -1,6 +1,15 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LiveTicker } from "./live-ticker";
+import { LanguageProvider } from "@/lib/i18n/language-context";
+
+function renderTicker() {
+  return render(
+    <LanguageProvider>
+      <LiveTicker />
+    </LanguageProvider>,
+  );
+}
 
 function jsonResponse(body: unknown, status = 200) {
   return {
@@ -54,7 +63,7 @@ describe("LiveTicker", () => {
         }),
       );
 
-    render(<LiveTicker />);
+    renderTicker();
 
     await waitFor(() => expect(screen.getAllByText(/Bengaluru Flood/).length).toBeGreaterThan(0));
     expect(screen.getAllByText(/O\+ needed in Bengaluru/).length).toBeGreaterThan(0);
@@ -68,7 +77,7 @@ describe("LiveTicker", () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     fetchMock.mockRejectedValue(new Error("network error"));
 
-    render(<LiveTicker />);
+    renderTicker();
 
     await waitFor(() =>
       expect(screen.getAllByText(/Report a missing person/).length).toBeGreaterThan(0),

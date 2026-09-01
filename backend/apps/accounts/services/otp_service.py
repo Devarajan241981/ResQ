@@ -34,7 +34,7 @@ def generate_and_send_otp(phone: str, purpose: str = OTPPurpose.LOGIN) -> OTPReq
         purpose=purpose,
         expires_at=expires_at,
     )
-    send_sms(str(phone), f"Your ResQ India verification code is {code}")
+    send_sms(str(phone), f"Your ResQ Bharath verification code is {code}")
     return otp
 
 

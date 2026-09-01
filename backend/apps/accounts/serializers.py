@@ -80,6 +80,17 @@ class OTPVerifySerializer(serializers.Serializer):
     full_name = serializers.CharField(required=False, allow_blank=True)
 
 
+class PhoneVerifyRequestSerializer(serializers.Serializer):
+    """A logged-in user requesting an OTP to verify their own phone number."""
+
+    phone = serializers.CharField()
+
+
+class PhoneVerifyConfirmSerializer(serializers.Serializer):
+    phone = serializers.CharField()
+    code = serializers.CharField(max_length=10)
+
+
 class GoogleLoginSerializer(serializers.Serializer):
     id_token = serializers.CharField()
 

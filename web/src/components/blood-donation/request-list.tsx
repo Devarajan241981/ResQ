@@ -1,18 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { MapPin, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useLanguage } from "@/lib/i18n/language-context";
 import { apiFetch, extractErrorMessage } from "@/lib/api/client";
 import type { BloodRequest, PaginatedResponse } from "@/lib/api/types";
 import { UrgencyBadge } from "./urgency-badge";
 
 export function RequestListHeader() {
+  const { t } = useLanguage();
   return (
     <div className="mb-4 flex items-center justify-between">
-      <h1 className="text-2xl font-semibold">Blood Donation Requests</h1>
+      <h1 className="text-2xl font-semibold">{t("bloodDonation.list.heading")}</h1>
       <Link href="/blood-donation/new" className="rounded-md bg-foreground px-4 py-2 text-sm text-background">
-        Post a request
+        {t("bloodDonation.list.postButton")}
       </Link>
     </div>
   );
@@ -20,6 +23,7 @@ export function RequestListHeader() {
 
 export function RequestList() {
   const { authFetch, isAuthenticated } = useAuth();
+  const { t } = useLanguage();
   const [requests, setRequests] = useState<BloodRequest[]>([]);
   const [status, setStatus] = useState<"loading" | "error" | "ready">("loading");
   const [error, setError] = useState<string | null>(null);
@@ -51,37 +55,49 @@ export function RequestList() {
     }
   }
 
-  if (status === "loading") return <p className="text-foreground/70">Loading…</p>;
+  if (status === "loading") return <p className="text-foreground/70">{t("common.loading")}</p>;
   if (status === "error") return <p role="alert" className="text-red-600">{error}</p>;
-  if (requests.length === 0) return <p className="text-foreground/70">No blood requests right now.</p>;
+  if (requests.length === 0) return <p className="text-foreground/70">{t("bloodDonation.list.empty")}</p>;
 
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="grid gap-4 sm:grid-cols-2">
       {requests.map((req) => (
-        <li key={req.id} className="rounded-lg border border-border p-4">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <h3 className="font-medium">
-                {req.blood_group} for {req.patient_name} · {req.units_needed} unit(s)
-              </h3>
-              <p className="text-sm text-foreground/70">{req.city}</p>
-              {req.notes && <p className="mt-1 text-sm">{req.notes}</p>}
-            </div>
-            <UrgencyBadge urgency={req.urgency} />
-          </div>
-          <div className="mt-3 flex items-center justify-between">
-            <span className="text-xs text-foreground/50">
-              {req.responses.length} donor(s) responded · status: {req.status}
+        <li key={req.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+          <div className="flex items-start gap-3 p-4">
+            {/* Blood-group badge — semantic red disc, not a flag edge */}
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-red-600 text-lg font-extrabold text-white shadow-inner">
+              {req.blood_group}
             </span>
-            {isAuthenticated && req.status === "open" && (
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-semibold leading-tight">
+                  {t("bloodDonation.list.forWord")} {req.patient_name}
+                </h3>
+                <UrgencyBadge urgency={req.urgency} />
+              </div>
+              <p className="mt-0.5 flex items-center gap-1 text-sm text-foreground/60">
+                <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {req.city} · {req.units_needed} {t("bloodDonation.list.unitSuffix")}
+              </p>
+              {req.notes && <p className="mt-2 line-clamp-2 text-sm text-foreground/80">{req.notes}</p>}
+            </div>
+          </div>
+          <div className="mt-auto flex items-center justify-between border-t border-border bg-surface/50 px-4 py-2.5">
+            <span className="inline-flex items-center gap-1.5 text-xs text-foreground/55">
+              <Users className="h-3.5 w-3.5" aria-hidden />
+              {req.responses.length} {t("bloodDonation.list.respondersSuffix")}
+            </span>
+            {isAuthenticated && req.status === "open" ? (
               <button
                 type="button"
                 disabled={respondingId === req.id}
                 onClick={() => handleRespond(req.id)}
-                className="rounded-md border border-border px-3 py-1 text-sm hover:bg-surface disabled:opacity-50"
+                className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
               >
-                I can donate
+                {t("bloodDonation.list.donateButton")}
               </button>
+            ) : (
+              <span className="text-xs font-medium capitalize text-foreground/45">{req.status}</span>
             )}
           </div>
         </li>

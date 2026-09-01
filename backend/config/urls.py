@@ -18,6 +18,7 @@ api_v1_patterns = [
     path("hospitals/", include("apps.hospitals.urls")),
     path("ambulance/", include("apps.ambulance.urls")),
     path("disaster-mode/", include("apps.disaster_mode.urls")),
+    path("campaigns/", include("apps.campaigns.urls")),
     path("sos/", include("apps.sos.urls")),
     path("volunteers/", include("apps.volunteers.urls")),
     path("ngos/", include("apps.ngos.urls")),
@@ -29,6 +30,11 @@ api_v1_patterns = [
     path("media/", include("apps.media.urls")),
     path("analytics/", include("apps.analytics.urls")),
     path("audit-logs/", include("apps.audit_logs.urls")),
+    path("admin-panel/", include("apps.admin_panel.urls")),
+    path("community/", include("apps.community.urls")),
+    path("gallery/", include("apps.gallery.urls")),
+    path("events/", include("apps.events.urls")),
+    path("tts/", include("apps.tts.urls")),
 ]
 
 urlpatterns = [

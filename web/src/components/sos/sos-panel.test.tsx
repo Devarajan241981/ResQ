@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SosPanel } from "./sos-panel";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 import * as tokenStorage from "@/lib/auth/token-storage";
 
 function jsonResponse(body: unknown, status = 200) {
@@ -34,9 +35,11 @@ function renderPanel() {
   fetchMock.mockResolvedValueOnce(jsonResponse(mockUser)); // /auth/me/
   fetchMock.mockResolvedValueOnce(jsonResponse(emptyAlertList)); // initial /sos/alerts/ list
   return render(
-    <AuthProvider>
-      <SosPanel />
-    </AuthProvider>,
+    <LanguageProvider>
+      <AuthProvider>
+        <SosPanel />
+      </AuthProvider>
+    </LanguageProvider>,
   );
 }
 

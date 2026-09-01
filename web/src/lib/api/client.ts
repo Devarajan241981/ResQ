@@ -40,6 +40,26 @@ export function extractErrorMessage(error: unknown): string {
   return error.message;
 }
 
+/**
+ * Fetch neural-TTS audio for the assistant. Returns a playable audio Blob, or
+ * null when the server has no TTS key configured (501) / the provider is down
+ * (502) / the network fails — the caller then falls back to browser voices.
+ */
+export async function synthesizeSpeech(text: string, language: string): Promise<Blob | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/tts/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, language }),
+    });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return blob.size > 0 ? blob : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestOptions = {},

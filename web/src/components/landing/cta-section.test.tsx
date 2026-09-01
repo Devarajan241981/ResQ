@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CtaSection } from "./cta-section";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 import * as tokenStorage from "@/lib/auth/token-storage";
 
 function jsonResponse(body: unknown, status = 200) {
@@ -25,9 +26,11 @@ describe("CtaSection", () => {
 
   it("shows the signup CTA when logged out", async () => {
     render(
-      <AuthProvider>
-        <CtaSection />
-      </AuthProvider>,
+      <LanguageProvider>
+        <AuthProvider>
+          <CtaSection />
+        </AuthProvider>
+      </LanguageProvider>,
     );
     await waitFor(() => expect(screen.getByText("Create your free account")).toBeInTheDocument());
   });
@@ -43,9 +46,11 @@ describe("CtaSection", () => {
     );
 
     const { container } = render(
-      <AuthProvider>
-        <CtaSection />
-      </AuthProvider>,
+      <LanguageProvider>
+        <AuthProvider>
+          <CtaSection />
+        </AuthProvider>
+      </LanguageProvider>,
     );
     await waitFor(() => expect(container).toBeEmptyDOMElement());
   });

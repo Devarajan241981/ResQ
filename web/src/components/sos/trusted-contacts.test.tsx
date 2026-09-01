@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TrustedContacts } from "./trusted-contacts";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 import * as tokenStorage from "@/lib/auth/token-storage";
 
 function jsonResponse(body: unknown, status = 200) {
@@ -34,9 +35,11 @@ function renderContacts(initialContacts: unknown[] = []) {
     jsonResponse({ count: initialContacts.length, num_pages: 1, current_page: 1, next: null, previous: null, results: initialContacts }),
   );
   return render(
-    <AuthProvider>
-      <TrustedContacts />
-    </AuthProvider>,
+    <LanguageProvider>
+      <AuthProvider>
+        <TrustedContacts />
+      </AuthProvider>
+    </LanguageProvider>,
   );
 }
 

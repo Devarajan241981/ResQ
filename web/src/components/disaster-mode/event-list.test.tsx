@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EventList } from "./event-list";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 
 function jsonResponse(body: unknown, status = 200) {
   return {
@@ -30,9 +31,11 @@ const mockEvent = {
 
 function renderList() {
   return render(
-    <AuthProvider>
-      <EventList />
-    </AuthProvider>,
+    <LanguageProvider>
+      <AuthProvider>
+        <EventList />
+      </AuthProvider>
+    </LanguageProvider>,
   );
 }
 

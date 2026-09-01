@@ -4,12 +4,15 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from apps.accounts.models import OTPPurpose
 from apps.accounts.serializers import (
     DeviceSessionSerializer,
     EmailLoginSerializer,
     GoogleLoginSerializer,
     OTPRequestSerializer,
     OTPVerifySerializer,
+    PhoneVerifyConfirmSerializer,
+    PhoneVerifyRequestSerializer,
     RegisterSerializer,
     UserSerializer,
 )
@@ -97,6 +100,60 @@ class OTPVerifyView(APIView):
             user.save(update_fields=["is_verified"])
 
         return Response(_auth_response(user, request), status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+
+class PhoneVerifyRequestView(APIView):
+    """Logged-in user asks for an OTP to verify (and set) their own phone number."""
+
+    serializer_class = PhoneVerifyRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "otp"
+
+    def post(self, request):
+        serializer = PhoneVerifyRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone = serializer.validated_data["phone"]
+        if User.objects.filter(phone=phone).exclude(pk=request.user.pk).exists():
+            return Response(
+                {"detail": "That phone number is already linked to another account."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        try:
+            otp_service.generate_and_send_otp(phone=phone, purpose=OTPPurpose.PHONE_VERIFICATION)
+        except DomainError as exc:
+            return Response({"detail": exc.message}, status=exc.status_code)
+        return Response({"detail": "OTP sent."})
+
+
+class PhoneVerifyConfirmView(APIView):
+    """Confirm the OTP and mark the current account's phone as verified."""
+
+    serializer_class = PhoneVerifyConfirmSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "otp"
+
+    def post(self, request):
+        serializer = PhoneVerifyConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        phone = serializer.validated_data["phone"]
+        code = serializer.validated_data["code"]
+        if User.objects.filter(phone=phone).exclude(pk=request.user.pk).exists():
+            return Response(
+                {"detail": "That phone number is already linked to another account."},
+                status=status.HTTP_409_CONFLICT,
+            )
+        try:
+            otp_service.verify_otp(phone, code, OTPPurpose.PHONE_VERIFICATION)
+        except DomainError as exc:
+            return Response({"detail": exc.message}, status=exc.status_code)
+
+        user = request.user
+        user.phone = phone
+        user.is_verified = True
+        user.save(update_fields=["phone", "is_verified"])
+        return Response(UserSerializer(user).data)
 
 
 class GoogleLoginView(APIView):

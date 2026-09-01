@@ -2,19 +2,22 @@
 
 import { useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useLanguage } from "@/lib/i18n/language-context";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import { extractErrorMessage } from "@/lib/api/client";
 import type { DisasterEvent, NeedType, StatusReport } from "@/lib/api/types";
 
-const NEED_TYPES: { value: NeedType; label: string }[] = [
-  { value: "safe", label: "Mark myself safe" },
-  { value: "need_rescue", label: "Need rescue" },
-  { value: "need_food", label: "Need food" },
-  { value: "need_water", label: "Need water" },
-  { value: "need_medicine", label: "Need medicine" },
+const NEED_TYPES: { value: NeedType; labelKey: TranslationKey }[] = [
+  { value: "safe", labelKey: "disasterMode.needType.safe" },
+  { value: "need_rescue", labelKey: "disasterMode.needType.rescue" },
+  { value: "need_food", labelKey: "disasterMode.needType.food" },
+  { value: "need_water", labelKey: "disasterMode.needType.water" },
+  { value: "need_medicine", labelKey: "disasterMode.needType.medicine" },
 ];
 
 export function EventCard({ event }: { event: DisasterEvent }) {
   const { authFetch, isAuthenticated } = useAuth();
+  const { t } = useLanguage();
   const [needType, setNeedType] = useState<NeedType>("safe");
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -51,12 +54,14 @@ export function EventCard({ event }: { event: DisasterEvent }) {
           {event.status}
         </span>
       </div>
-      <p className="mt-2 text-xs text-foreground/50">{event.open_needs_count} open need(s) reported</p>
+      <p className="mt-2 text-xs text-foreground/50">
+        {event.open_needs_count} {t("disasterMode.card.openNeedsSuffix")}
+      </p>
 
       {isAuthenticated && (
         <div className="mt-3 border-t border-border pt-3">
           {submitted ? (
-            <p className="text-sm text-green-600">Thanks — your status has been reported.</p>
+            <p className="text-sm text-green-600">{t("disasterMode.card.thanks")}</p>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2">
               {error && (
@@ -65,16 +70,16 @@ export function EventCard({ event }: { event: DisasterEvent }) {
                 </p>
               )}
               <label className="flex flex-col gap-1 text-sm">
-                <span className="sr-only">Status</span>
+                <span className="sr-only">{t("disasterMode.card.statusSr")}</span>
                 <select
                   value={needType}
                   onChange={(e) => setNeedType(e.target.value as NeedType)}
-                  aria-label={`Status for ${event.name}`}
+                  aria-label={`${t("disasterMode.card.statusForPrefix")} ${event.name}`}
                   className="rounded-md border border-border bg-background px-2 py-1.5 text-sm"
                 >
                   {NEED_TYPES.map((n) => (
                     <option key={n.value} value={n.value}>
-                      {n.label}
+                      {t(n.labelKey)}
                     </option>
                   ))}
                 </select>
@@ -82,8 +87,8 @@ export function EventCard({ event }: { event: DisasterEvent }) {
               <input
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional notes"
-                aria-label={`Notes for ${event.name}`}
+                placeholder={t("disasterMode.card.notesPlaceholder")}
+                aria-label={`${t("disasterMode.card.notesForPrefix")} ${event.name}`}
                 className="min-w-40 flex-1 rounded-md border border-border bg-background px-2 py-1.5 text-sm"
               />
               <button
@@ -91,7 +96,7 @@ export function EventCard({ event }: { event: DisasterEvent }) {
                 disabled={isSubmitting}
                 className="rounded-md bg-foreground px-3 py-1.5 text-sm text-background disabled:opacity-50"
               >
-                {isSubmitting ? "Sending…" : "Report status"}
+                {isSubmitting ? t("common.sending") : t("disasterMode.card.reportButton")}
               </button>
             </form>
           )}

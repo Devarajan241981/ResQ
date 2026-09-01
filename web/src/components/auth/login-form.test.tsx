@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LoginForm } from "./login-form";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 
 const pushMock = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -20,9 +21,11 @@ function jsonResponse(body: unknown, status = 200) {
 
 function renderLoginForm() {
   return render(
-    <AuthProvider>
-      <LoginForm />
-    </AuthProvider>,
+    <LanguageProvider>
+      <AuthProvider>
+        <LoginForm />
+      </AuthProvider>
+    </LanguageProvider>,
   );
 }
 

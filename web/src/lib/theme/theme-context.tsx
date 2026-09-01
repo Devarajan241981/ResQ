@@ -9,7 +9,12 @@ function getPreferredTheme(): Theme {
   if (typeof window === "undefined") return "light";
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  // Deliberately ignore the OS/browser prefers-color-scheme here: this is a
+  // civic emergency platform used by a broad age range, and a first-time
+  // visitor whose device happens to be set to dark mode should still land on
+  // the higher-contrast, more broadly legible light theme by default. Dark
+  // mode is still one click away via the toggle for anyone who wants it.
+  return "light";
 }
 
 interface ThemeContextValue {

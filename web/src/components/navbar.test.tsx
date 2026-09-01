@@ -1,10 +1,16 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Navbar } from "./navbar";
 import { AuthProvider } from "@/lib/auth/auth-context";
 import { LanguageProvider } from "@/lib/i18n/language-context";
 import { ThemeProvider } from "@/lib/theme/theme-context";
 import * as tokenStorage from "@/lib/auth/token-storage";
+
+// Navbar renders the notifications bell, which navigates via useRouter.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
 
 function jsonResponse(body: unknown, status = 200) {
   return {
@@ -44,7 +50,7 @@ describe("Navbar", () => {
     expect(screen.queryByTestId("nav-username")).not.toBeInTheDocument();
   });
 
-  it("shows the user's name and a logout button when logged in", async () => {
+  it("shows a profile avatar (not login links) when logged in", async () => {
     tokenStorage.setTokens("access-tok", "refresh-tok");
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValueOnce(
@@ -62,8 +68,10 @@ describe("Navbar", () => {
     );
 
     renderNavbar();
-    await waitFor(() => expect(screen.getByTestId("nav-username")).toHaveTextContent("Asha Citizen"));
-    expect(screen.getByText("Log out")).toBeInTheDocument();
+    // The navbar shows an initials avatar named after the user, not the raw name.
+    await waitFor(() => expect(screen.getByTestId("nav-username")).toHaveAccessibleName("Asha Citizen"));
+    expect(screen.getByTestId("nav-username")).toHaveTextContent("AC");
+    expect(screen.queryByText("Log in")).not.toBeInTheDocument();
   });
 
   it("renders all core module links", async () => {
@@ -73,5 +81,16 @@ describe("Navbar", () => {
     expect(screen.getByText("SOS")).toBeInTheDocument();
     expect(screen.getByText("Blood Donation")).toBeInTheDocument();
     expect(screen.getByText("Disaster Mode")).toBeInTheDocument();
+  });
+
+  it("exposes a mobile hamburger that toggles the drawer", async () => {
+    const user = userEvent.setup();
+    renderNavbar();
+    const menuBtn = await screen.findByRole("button", { name: "Menu" });
+    expect(menuBtn).toHaveAttribute("aria-expanded", "false");
+    await user.click(menuBtn);
+    expect(screen.getByRole("button", { name: "Menu" })).toHaveAttribute("aria-expanded", "true");
+    // The drawer surfaces the login actions for a logged-out visitor.
+    expect(screen.getAllByText("Sign up").length).toBeGreaterThan(0);
   });
 });

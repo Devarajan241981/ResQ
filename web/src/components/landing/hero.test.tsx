@@ -5,6 +5,11 @@ import { AuthProvider } from "@/lib/auth/auth-context";
 import { LanguageProvider } from "@/lib/i18n/language-context";
 import * as tokenStorage from "@/lib/auth/token-storage";
 
+// The hero's search box uses useRouter — stub it so the app-router invariant passes.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 function jsonResponse(body: unknown, status = 200) {
   return {
     ok: status >= 200 && status < 300,
@@ -56,7 +61,7 @@ describe("Hero", () => {
 
   it("renders the headline and browse-reports link", async () => {
     renderHero();
-    await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("ResQ India"));
+    await waitFor(() => expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("ResQ Bharath"));
     expect(screen.getByText("Browse missing persons")).toBeInTheDocument();
   });
 });

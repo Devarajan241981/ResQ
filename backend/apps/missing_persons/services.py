@@ -6,12 +6,17 @@ import qrcode
 from django.conf import settings
 from django.core.files.base import ContentFile
 
+from django.db import transaction
+
 from apps.missing_persons.models import (
     EmergencyContact,
     MissingPersonPhoto,
     MissingPersonReport,
+    ReportComment,
     SightingReport,
 )
+from apps.notifications.models import NotificationType
+from apps.notifications.services import notify_user
 
 
 def public_share_url(report: MissingPersonReport) -> str:
@@ -71,7 +76,19 @@ def add_photo(report: MissingPersonReport, image_file) -> MissingPersonPhoto:
 
 
 def add_sighting(report: MissingPersonReport, reported_by, validated_data: dict) -> SightingReport:
-    return SightingReport.objects.create(report=report, reported_by=reported_by, **validated_data)
+    sighting = SightingReport.objects.create(report=report, reported_by=reported_by, **validated_data)
+    # "Buzzer" to the family: the reporter is alerted the moment anyone says they
+    # spotted this person. on_commit so a rolled-back sighting never notifies.
+    transaction.on_commit(
+        lambda: notify_user(
+            recipient=report.reported_by,
+            notification_type=NotificationType.MISSING_PERSON_ALERT,
+            title=f"Possible sighting of {report.name}",
+            body=validated_data.get("location_text") or validated_data.get("description", "")[:140],
+            data={"report_id": str(report.id), "public_slug": report.public_slug, "kind": "sighting"},
+        )
+    )
+    return sighting
 
 
 def update_status(report: MissingPersonReport, new_status: str) -> MissingPersonReport:
@@ -89,3 +106,18 @@ __all__ = [
     "add_sighting",
     "update_status",
 ]
+
+
+def add_comment(report: MissingPersonReport, author, content: str) -> ReportComment:
+    comment = ReportComment.objects.create(report=report, author=author, content=content)
+    if author.id != report.reported_by_id:
+        transaction.on_commit(
+            lambda: notify_user(
+                recipient=report.reported_by,
+                notification_type=NotificationType.SYSTEM,
+                title=f"New comment on {report.name}'s post",
+                body=content[:140],
+                data={"report_id": str(report.id), "public_slug": report.public_slug, "kind": "comment"},
+            )
+        )
+    return comment

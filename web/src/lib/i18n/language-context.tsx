@@ -9,7 +9,7 @@ const DEFAULT_LANGUAGE: LanguageCode = "en";
 interface LanguageContextValue {
   language: LanguageCode;
   setLanguage: (lang: LanguageCode) => void;
-  t: (key: TranslationKey) => string;
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -26,6 +26,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     if (stored) setLanguageState(stored);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
   const setLanguage = (lang: LanguageCode) => {
     setLanguageState(lang);
     window.localStorage.setItem(STORAGE_KEY, lang);
@@ -35,7 +39,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     () => ({
       language,
       setLanguage,
-      t: (key: TranslationKey) => translate(language, key),
+      t: (key: TranslationKey, params?: Record<string, string | number>) => translate(language, key, params),
     }),
     [language],
   );

@@ -33,6 +33,7 @@ interface AuthContextValue {
   requestOtp: (phone: string) => Promise<void>;
   verifyOtp: (phone: string, code: string, fullName?: string) => Promise<void>;
   logout: () => void;
+  reloadUser: () => Promise<void>;
   authFetch: <T>(path: string, options?: RequestOptions) => Promise<T>;
 }
 
@@ -148,6 +149,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  // Re-fetch the current user (e.g. after verifying a phone number) so freshly
+  // changed fields like is_verified reflect immediately without a full reload.
+  const reloadUser = useCallback(async () => {
+    try {
+      const me = await authFetch<User>("/auth/me/");
+      setUser(me);
+    } catch {
+      /* ignore — keep the existing user */
+    }
+  }, [authFetch]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -158,9 +170,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestOtp,
       verifyOtp,
       logout,
+      reloadUser,
       authFetch,
     }),
-    [user, isLoading, loginWithEmail, register, requestOtp, verifyOtp, logout, authFetch],
+    [user, isLoading, loginWithEmail, register, requestOtp, verifyOtp, logout, reloadUser, authFetch],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

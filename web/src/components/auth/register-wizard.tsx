@@ -3,14 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useAuth, type RegisterInput } from "@/lib/auth/auth-context";
+import { useLanguage } from "@/lib/i18n/language-context";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import { extractErrorMessage } from "@/lib/api/client";
 import type { BloodGroup, Gender } from "@/lib/api/types";
+import { normalizePhone } from "@/lib/phone";
+import { PasswordInput } from "./password-input";
 
 const BLOOD_GROUPS: BloodGroup[] = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-const GENDERS: { value: Gender; label: string }[] = [
-  { value: "female", label: "Female" },
-  { value: "male", label: "Male" },
-  { value: "other", label: "Other" },
+const GENDERS: { value: Gender; labelKey: TranslationKey }[] = [
+  { value: "female", labelKey: "common.female" },
+  { value: "male", labelKey: "common.male" },
+  { value: "other", labelKey: "common.other" },
 ];
 
 type StepId = "name" | "email" | "phone" | "password" | "gender" | "city" | "bloodGroup" | "review";
@@ -37,6 +41,7 @@ const EMPTY_ANSWERS: Answers = {
 };
 
 function ProgressBar({ stepIndex, total }: { stepIndex: number; total: number }) {
+  const { t } = useLanguage();
   return (
     <div className="mb-8">
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface">
@@ -46,7 +51,7 @@ function ProgressBar({ stepIndex, total }: { stepIndex: number; total: number })
         />
       </div>
       <p className="mt-2 text-xs text-foreground/50">
-        Step {stepIndex + 1} of {total}
+        {t("wizard.stepOf", { current: stepIndex + 1, total })}
       </p>
     </div>
   );
@@ -59,7 +64,6 @@ function QuestionShell({
   onSubmit,
   onBack,
   canGoBack,
-  submitLabel = "Next",
   onSkip,
 }: {
   question: string;
@@ -68,9 +72,9 @@ function QuestionShell({
   onSubmit: (e: FormEvent) => void;
   onBack: () => void;
   canGoBack: boolean;
-  submitLabel?: string;
   onSkip?: () => void;
 }) {
+  const { t } = useLanguage();
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-md">
       <h1 className="text-2xl font-semibold">{question}</h1>
@@ -81,11 +85,11 @@ function QuestionShell({
           type="submit"
           className="rounded-md bg-foreground px-5 py-2.5 text-sm font-semibold text-background hover:opacity-90"
         >
-          {submitLabel}
+          {t("common.next")}
         </button>
         {onSkip && (
           <button type="button" onClick={onSkip} className="text-sm text-foreground/50 hover:underline">
-            Skip
+            {t("common.skip")}
           </button>
         )}
         {canGoBack && (
@@ -94,7 +98,7 @@ function QuestionShell({
             onClick={onBack}
             className="ml-auto text-sm text-foreground/50 hover:underline"
           >
-            Back
+            {t("common.back")}
           </button>
         )}
       </div>
@@ -105,10 +109,12 @@ function QuestionShell({
 export function RegisterWizard() {
   const router = useRouter();
   const { register } = useAuth();
+  const { t } = useLanguage();
 
   const [stepIndex, setStepIndex] = useState(0);
   const [answers, setAnswers] = useState<Answers>(EMPTY_ANSWERS);
   const [error, setError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const step = STEPS[stepIndex];
@@ -145,7 +151,7 @@ export function RegisterWizard() {
   const stepIndexForProgress = STEPS.indexOf(step);
 
   return (
-    <div>
+    <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-background/60 p-6 shadow-sm sm:p-8">
       <ProgressBar stepIndex={stepIndexForProgress} total={STEPS.length} />
 
       {error && (
@@ -156,7 +162,7 @@ export function RegisterWizard() {
 
       {step === "name" && (
         <QuestionShell
-          question="What's your name?"
+          question={t("wizard.nameQ")}
           canGoBack={false}
           onBack={goBack}
           onSubmit={(e) => {
@@ -170,7 +176,7 @@ export function RegisterWizard() {
             aria-label="Full name"
             value={answers.full_name}
             onChange={(e) => update("full_name", e.target.value)}
-            placeholder="Asha Kumar"
+            placeholder={t("wizard.namePlaceholder")}
             className="w-full rounded-md border border-border bg-background px-4 py-3 text-lg"
           />
         </QuestionShell>
@@ -178,7 +184,7 @@ export function RegisterWizard() {
 
       {step === "email" && (
         <QuestionShell
-          question="What's your email?"
+          question={t("wizard.emailQ")}
           canGoBack
           onBack={goBack}
           onSubmit={(e) => {
@@ -201,13 +207,20 @@ export function RegisterWizard() {
 
       {step === "phone" && (
         <QuestionShell
-          question="What's your phone number?"
-          hint="Used for OTP login and SOS alerts."
+          question={t("wizard.phoneQ")}
+          hint={t("wizard.phoneHint")}
           canGoBack
           onBack={goBack}
           onSubmit={(e) => {
             e.preventDefault();
-            if (answers.phone.trim()) goNext();
+            const normalized = normalizePhone(answers.phone);
+            if (!normalized) {
+              setPhoneError(t("wizard.phoneError"));
+              return;
+            }
+            setPhoneError(null);
+            update("phone", normalized);
+            goNext();
           }}
         >
           <input
@@ -216,17 +229,25 @@ export function RegisterWizard() {
             required
             aria-label="Phone"
             value={answers.phone}
-            onChange={(e) => update("phone", e.target.value)}
+            onChange={(e) => {
+              setPhoneError(null);
+              update("phone", e.target.value);
+            }}
             placeholder="+91XXXXXXXXXX"
             className="w-full rounded-md border border-border bg-background px-4 py-3 text-lg"
           />
+          {phoneError && (
+            <p role="alert" className="mt-2 text-sm text-red-600">
+              {phoneError}
+            </p>
+          )}
         </QuestionShell>
       )}
 
       {step === "password" && (
         <QuestionShell
-          question="Choose a password"
-          hint="At least 10 characters."
+          question={t("wizard.passwordQ")}
+          hint={t("wizard.passwordHint")}
           canGoBack
           onBack={goBack}
           onSubmit={(e) => {
@@ -234,9 +255,8 @@ export function RegisterWizard() {
             if (answers.password.length >= 10) goNext();
           }}
         >
-          <input
+          <PasswordInput
             autoFocus
-            type="password"
             required
             minLength={10}
             aria-label="Password"
@@ -249,8 +269,8 @@ export function RegisterWizard() {
 
       {step === "gender" && (
         <QuestionShell
-          question="How do you identify?"
-          hint="Optional — helps us route the right kind of assistance during an emergency."
+          question={t("wizard.genderQ")}
+          hint={t("wizard.genderHint")}
           canGoBack
           onBack={goBack}
           onSkip={() => {
@@ -274,7 +294,7 @@ export function RegisterWizard() {
                     : "border-border hover:bg-surface"
                 }`}
               >
-                {g.label}
+                {t(g.labelKey)}
               </button>
             ))}
           </div>
@@ -283,8 +303,8 @@ export function RegisterWizard() {
 
       {step === "city" && (
         <QuestionShell
-          question="Which city are you in?"
-          hint="Helps match you with nearby volunteers, donors, and alerts. Optional."
+          question={t("wizard.cityQ")}
+          hint={t("wizard.cityHint")}
           canGoBack
           onBack={goBack}
           onSkip={() => {
@@ -301,7 +321,7 @@ export function RegisterWizard() {
             aria-label="City"
             value={answers.city}
             onChange={(e) => update("city", e.target.value)}
-            placeholder="Bengaluru"
+            placeholder={t("wizard.cityPlaceholder")}
             className="w-full rounded-md border border-border bg-background px-4 py-3 text-lg"
           />
         </QuestionShell>
@@ -309,8 +329,8 @@ export function RegisterWizard() {
 
       {step === "bloodGroup" && (
         <QuestionShell
-          question="What's your blood group?"
-          hint="Optional — register as a donor so nearby emergency requests can reach you."
+          question={t("wizard.bloodGroupQ")}
+          hint={t("wizard.bloodGroupHint")}
           canGoBack
           onBack={goBack}
           onSkip={() => {
@@ -343,15 +363,15 @@ export function RegisterWizard() {
 
       {step === "review" && (
         <div className="mx-auto max-w-md">
-          <h1 className="text-2xl font-semibold">Review &amp; create account</h1>
+          <h1 className="text-2xl font-semibold">{t("wizard.reviewHeading")}</h1>
           <dl className="mt-6 divide-y divide-border rounded-lg border border-border text-sm">
             {[
-              ["Name", answers.full_name],
-              ["Email", answers.email],
-              ["Phone", answers.phone],
-              ["Gender", answers.gender || "Not specified"],
-              ["City", answers.city || "Not specified"],
-              ["Blood group", answers.blood_group || "Not registering as a donor"],
+              [t("wizard.reviewName"), answers.full_name],
+              [t("wizard.reviewEmail"), answers.email],
+              [t("wizard.reviewPhone"), answers.phone],
+              [t("wizard.reviewGender"), answers.gender || t("common.notSpecified")],
+              [t("wizard.reviewCity"), answers.city || t("common.notSpecified")],
+              [t("wizard.reviewBloodGroup"), answers.blood_group || t("wizard.notRegisteringDonor")],
             ].map(([label, value]) => (
               <div key={label} className="flex justify-between px-4 py-3">
                 <dt className="text-foreground/50">{label}</dt>
@@ -366,10 +386,10 @@ export function RegisterWizard() {
               onClick={handleFinalSubmit}
               className="rounded-md bg-red-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
             >
-              {isSubmitting ? "Creating account…" : "Create account"}
+              {isSubmitting ? t("wizard.creatingAccount") : t("wizard.createAccount")}
             </button>
             <button type="button" onClick={goBack} className="ml-auto text-sm text-foreground/50 hover:underline">
-              Back
+              {t("common.back")}
             </button>
           </div>
         </div>

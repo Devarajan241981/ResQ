@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RequestList } from "./request-list";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 import * as tokenStorage from "@/lib/auth/token-storage";
 
 function jsonResponse(body: unknown, status = 200) {
@@ -32,9 +33,11 @@ const mockRequest = {
 
 function renderList() {
   return render(
-    <AuthProvider>
-      <RequestList />
-    </AuthProvider>,
+    <LanguageProvider>
+      <AuthProvider>
+        <RequestList />
+      </AuthProvider>
+    </LanguageProvider>,
   );
 }
 
@@ -55,7 +58,7 @@ describe("RequestList", () => {
     );
 
     renderList();
-    await waitFor(() => expect(screen.getByText(/O\+ for John/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/for John/)).toBeInTheDocument());
     const [, options] = fetchMock.mock.calls[0];
     expect(options?.headers?.Authorization).toBeUndefined();
   });
@@ -67,7 +70,7 @@ describe("RequestList", () => {
     );
 
     renderList();
-    await waitFor(() => expect(screen.getByText(/O\+ for John/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/for John/)).toBeInTheDocument());
     expect(screen.queryByRole("button", { name: "I can donate" })).not.toBeInTheDocument();
   });
 

@@ -1,4 +1,10 @@
-"""Scaffold only — API not yet implemented, see docs/ROADMAP.md."""
+from rest_framework.routers import DefaultRouter
+
+from apps.missing_children.views import MissingChildReportViewSet
+
 app_name = "missing_children"
 
-urlpatterns = []
+router = DefaultRouter()
+router.register("", MissingChildReportViewSet, basename="missing-child")
+
+urlpatterns = router.urls

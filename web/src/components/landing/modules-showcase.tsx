@@ -1,148 +1,95 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import {
+  ArrowRight,
+  CloudRain,
+  Droplet,
+  Megaphone,
+  Search,
+  ShieldAlert,
+  type LucideIcon,
+} from "lucide-react";
+import { useLanguage } from "@/lib/i18n/language-context";
+import type { TranslationKey } from "@/lib/i18n/translations";
 import { PHOTOS } from "@/lib/media/stock-photos";
 
-interface ModuleInfo {
+interface LiveModule {
   photo: string;
-  title: string;
-  description: string;
-  href?: string;
-  live: boolean;
+  icon: LucideIcon;
+  titleKey: TranslationKey;
+  descKey: TranslationKey;
+  href: string;
+  accent: string;
 }
 
-const MODULES: ModuleInfo[] = [
-  {
-    photo: PHOTOS.missingPersons,
-    title: "Missing Persons",
-    description: "Report, share via QR code, and track sighting reports with AI-assisted risk scoring.",
-    href: "/missing-persons",
-    live: true,
-  },
-  {
-    photo: PHOTOS.sos,
-    title: "SOS",
-    description: "One-tap emergency alert with live location to trusted contacts and nearby volunteers.",
-    href: "/sos",
-    live: true,
-  },
-  {
-    photo: PHOTOS.bloodDonation,
-    title: "Blood Donation",
-    description: "Post an emergency blood request or find nearby donors by blood group and city.",
-    href: "/blood-donation",
-    live: true,
-  },
-  {
-    photo: PHOTOS.disasterMode,
-    title: "Disaster Mode",
-    description: "Mark yourself safe, or request rescue, food, water, or medicine during active disasters.",
-    href: "/disaster-mode",
-    live: true,
-  },
-  {
-    photo: PHOTOS.missingChildren,
-    title: "Missing Children",
-    description: "A dedicated workflow with extra verification and priority alerts for child safety cases.",
-    live: false,
-  },
-  {
-    photo: PHOTOS.missingElderly,
-    title: "Missing Elderly",
-    description: "Support for dementia and Alzheimer's cases, with a large emergency button and medical history.",
-    live: false,
-  },
-  {
-    photo: PHOTOS.lostPets,
-    title: "Lost Pets",
-    description: "Upload photos and details of a lost pet; nearby shelters and vets can respond directly.",
-    live: false,
-  },
-  {
-    photo: PHOTOS.hospitals,
-    title: "Hospital Directory",
-    description: "Find emergency, trauma, government, and private hospitals with live navigation and calling.",
-    live: false,
-  },
-  {
-    photo: PHOTOS.ambulance,
-    title: "Ambulance",
-    description: "Request an ambulance and track status, with nearby provider notification.",
-    live: false,
-  },
-  {
-    photo: PHOTOS.volunteers,
-    title: "Nearby Volunteers",
-    description: "Verified volunteers by skill — medical, search & rescue, animal rescue, transport.",
-    live: false,
-  },
-  {
-    photo: PHOTOS.ngos,
-    title: "NGOs",
-    description: "Verified NGO dashboards to accept, update, and close community assistance cases.",
-    live: false,
-  },
-  {
-    photo: PHOTOS.shelters,
-    title: "Shelter Finder",
-    description: "Government, NGO, and temporary shelters with live capacity and contact details.",
-    live: false,
-  },
+// Accent bars rotate through the national palette: saffron, navy, green.
+const LIVE_MODULES: LiveModule[] = [
+  { photo: PHOTOS.missingPersons, icon: Search, titleKey: "modules.missingPersons.title", descKey: "modules.missingPersons.description", href: "/missing-persons", accent: "bg-[#FF9933]" },
+  { photo: PHOTOS.sos, icon: ShieldAlert, titleKey: "modules.sos.title", descKey: "modules.sos.description", href: "/sos", accent: "bg-[#123a6b]" },
+  { photo: PHOTOS.bloodDonation, icon: Droplet, titleKey: "modules.bloodDonation.title", descKey: "modules.bloodDonation.description", href: "/blood-donation", accent: "bg-[#138808]" },
+  { photo: PHOTOS.disasterMode, icon: CloudRain, titleKey: "modules.disasterMode.title", descKey: "modules.disasterMode.description", href: "/disaster-mode", accent: "bg-[#FF9933]" },
+  { photo: PHOTOS.campaigns, icon: Megaphone, titleKey: "modules.campaigns.title", descKey: "modules.campaigns.description", href: "/campaigns", accent: "bg-[#123a6b]" },
 ];
 
-function ModuleCard({ mod }: { mod: ModuleInfo }) {
-  const card = (
-    <div className="group relative aspect-[4/5] overflow-hidden rounded-xl">
-      <Image
-        src={mod.photo}
-        alt=""
-        fill
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        className={`object-cover transition-transform duration-500 ${mod.live ? "group-hover:scale-105" : "grayscale"}`}
-      />
-      <div
-        aria-hidden
-        className={`absolute inset-0 bg-gradient-to-t ${mod.live ? "from-black/90 via-black/20 to-transparent" : "from-black/85 via-black/40 to-black/10"}`}
-      />
+function LiveModuleCard({ mod, featured }: { mod: LiveModule; featured?: boolean }) {
+  const { t } = useLanguage();
+  const Icon = mod.icon;
 
-      <span
-        className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-xs font-semibold ${
-          mod.live ? "bg-green-500 text-white" : "bg-white/90 text-black"
-        }`}
-      >
-        {mod.live ? "Live" : "Coming soon"}
-      </span>
-
-      <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-        <h3 className="font-bold">{mod.title}</h3>
-        <p className="mt-1 text-sm text-white/80">{mod.description}</p>
+  return (
+    <Link
+      href={mod.href}
+      className={`group flex flex-col overflow-hidden rounded-lg border border-border bg-background shadow-sm transition-shadow hover:shadow-md ${
+        featured ? "sm:col-span-2 sm:row-span-2" : ""
+      }`}
+    >
+      <span aria-hidden className={`h-1 ${mod.accent}`} />
+      <div className={`relative ${featured ? "aspect-[16/10] flex-1 sm:aspect-auto sm:min-h-64" : "aspect-[16/10]"}`}>
+        <Image
+          src={mod.photo}
+          alt=""
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+        <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-black shadow">
+          <span className="h-1.5 w-1.5 rounded-full bg-green-600" aria-hidden />
+          {t("modules.live")}
+        </span>
       </div>
-    </div>
-  );
-
-  return mod.href ? (
-    <Link href={mod.href} className="block">
-      {card}
+      <div className="flex items-start gap-3 p-4">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-surface text-foreground/70">
+          <Icon className="h-4.5 w-4.5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <h3 className="flex items-center gap-1.5 font-bold">
+            {t(mod.titleKey)}
+            <ArrowRight className="h-4 w-4 shrink-0 text-foreground/40 transition-transform group-hover:translate-x-0.5" aria-hidden />
+          </h3>
+          <p className="mt-1 text-sm text-foreground/70">{t(mod.descKey)}</p>
+        </div>
+      </div>
     </Link>
-  ) : (
-    card
   );
 }
 
 export function ModulesShowcase() {
-  return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-16">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold tracking-tight">One platform, every kind of emergency</h2>
-        <p className="mx-auto mt-3 max-w-2xl text-foreground/70">
-          Twelve community-driven modules built around how emergencies actually unfold in India — four
-          are live today, the rest are actively being built in the open.
-        </p>
-      </div>
+  const { t } = useLanguage();
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {MODULES.map((mod) => (
-          <ModuleCard key={mod.title} mod={mod} />
-        ))}
+  return (
+    <section className="bg-surface">
+      <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold tracking-tight">{t("modules.heading")}</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-foreground/70">{t("modules.subheading")}</p>
+        </div>
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {LIVE_MODULES.map((mod, i) => (
+            <LiveModuleCard key={mod.titleKey} mod={mod} featured={i === 0} />
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -110,3 +110,74 @@ def test_add_sighting(auth_client):
     )
     assert resp.status_code == 201
     assert MissingPersonReport.objects.get(id=created.data["id"]).sightings.count() == 1
+
+
+# ---------------------------------------------------------------------------
+# Public feed + comments + sighting "buzzer" notification
+# ---------------------------------------------------------------------------
+
+def _make_report(reporter):
+    return MissingPersonReport.objects.create(
+        reported_by=reporter,
+        name="Ravi Kumar",
+        age=12,
+        gender="male",
+        last_seen_location="Majestic, Bengaluru",
+        last_seen_at=timezone.now() - timedelta(hours=6),
+    )
+
+
+def test_feed_is_public_and_pii_safe(api_client, user):
+    _make_report(user)
+    resp = api_client.get(url("missing-person-list"))
+    assert resp.status_code == 200
+    assert resp.data["count"] == 1
+    item = resp.data["results"][0]
+    assert item["name"] == "Ravi Kumar"
+    # The public feed must never leak reporter identity or contact numbers.
+    assert "emergency_contacts" not in item
+    assert "reported_by" not in item
+
+
+def test_comments_public_read_authenticated_write(api_client, user, make_auth_client):
+    report = _make_report(user)
+    comments_url = url("missing-person-comments", pk=report.pk)
+
+    # Anonymous users can read but not write.
+    assert api_client.get(comments_url).status_code == 200
+    assert api_client.post(comments_url, {"content": "Seen near market"}).status_code == 401
+
+    from apps.accounts.tests.factories import UserFactory
+    commenter = UserFactory()
+    from rest_framework.test import APIClient
+    from rest_framework_simplejwt.tokens import RefreshToken
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {RefreshToken.for_user(commenter).access_token}")
+
+    resp = client.post(comments_url, {"content": "Shared in our society group."})
+    assert resp.status_code == 201
+    assert resp.data["author_name"] == commenter.full_name
+
+    listed = api_client.get(comments_url)
+    assert len(listed.data) == 1
+
+
+def test_sighting_notifies_the_reporter(user, django_capture_on_commit_callbacks):
+    from apps.accounts.tests.factories import UserFactory
+    from apps.notifications.models import Notification
+    from apps.missing_persons import services
+
+    report = _make_report(user)
+    spotter = UserFactory()
+    with django_capture_on_commit_callbacks(execute=True):
+        services.add_sighting(
+            report,
+            spotter,
+            {"description": "Seen boarding a bus", "location_text": "KR Market", "sighted_at": timezone.now()},
+        )
+
+    # The report-creation signal may have already geo-broadcast an alert to
+    # this user, so match the sighting notification specifically.
+    notification = Notification.objects.get(recipient=user, data__kind="sighting")
+    assert "Ravi Kumar" in notification.title
+    assert notification.data["kind"] == "sighting"

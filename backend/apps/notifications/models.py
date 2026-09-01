@@ -16,6 +16,9 @@ class NotificationType(models.TextChoices):
     DISASTER_ALERT = "disaster_alert", "Disaster Alert"
     BLOOD_REQUEST = "blood_request", "Blood Request"
     VOLUNTEER_ASSIGNMENT = "volunteer_assignment", "Volunteer Assignment"
+    CAMPAIGN_UPDATE = "campaign_update", "Campaign Update"
+    COMMUNITY_POST = "community_post", "Community Post"
+    EVENT_UPDATE = "event_update", "Event Update"
     SYSTEM = "system", "System"
 
 

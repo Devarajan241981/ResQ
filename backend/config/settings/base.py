@@ -1,5 +1,5 @@
 """
-Base Django settings for the ResQ India platform.
+Base Django settings for the ResQ Bharath platform.
 Shared by every environment; dev.py / prod.py override as needed.
 """
 from datetime import timedelta
@@ -57,12 +57,18 @@ LOCAL_APPS = [
     "apps.blood_donation",
     "apps.ambulance",
     "apps.disaster_mode",
+    "apps.campaigns",
     "apps.sos",
     "apps.ai_matching",
     "apps.maps",
     "apps.search",
     "apps.media",
     "apps.analytics",
+    "apps.admin_panel",
+    "apps.community",
+    "apps.gallery",
+    "apps.events",
+    "apps.tts",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -190,6 +196,7 @@ REST_FRAMEWORK = {
         "otp": "5/min",
         "report-create": "20/min",
         "maps": "60/min",
+        "tts": "60/min",
     },
     "EXCEPTION_HANDLER": "apps.common.exceptions.api_exception_handler",
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
@@ -197,8 +204,8 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "ResQ India API",
-    "DESCRIPTION": "AI-powered emergency community platform for India.",
+    "TITLE": "ResQ Bharath API",
+    "DESCRIPTION": "AI-powered emergency community platform for Bharath.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
 }
@@ -219,6 +226,15 @@ FRONTEND_BASE_URL = env("FRONTEND_BASE_URL", default="http://localhost:3000")
 
 ORS_API_KEY = env("ORS_API_KEY", default="")
 ORS_BASE_URL = env("ORS_BASE_URL", default="https://api.openrouteservice.org")
+
+# Sarvam AI neural TTS (bulbul) — natural, native-accent voices for Indian
+# languages. When SARVAM_API_KEY is empty the assistant silently falls back to
+# the browser's built-in Web Speech voices. Female speaker by default.
+SARVAM_API_KEY = env("SARVAM_API_KEY", default="")
+SARVAM_BASE_URL = env("SARVAM_BASE_URL", default="https://api.sarvam.ai")
+SARVAM_MODEL = env("SARVAM_MODEL", default="bulbul:v2")
+SARVAM_SPEAKER = env("SARVAM_SPEAKER", default="anushka")
+SARVAM_PACE = env.float("SARVAM_PACE", default=1.0)
 
 GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
 

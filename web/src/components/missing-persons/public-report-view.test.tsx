@@ -1,6 +1,15 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PublicReportView } from "./public-report-view";
+import { LanguageProvider } from "@/lib/i18n/language-context";
+
+function renderView(slug: string) {
+  return render(
+    <LanguageProvider>
+      <PublicReportView slug={slug} />
+    </LanguageProvider>,
+  );
+}
 
 function jsonResponse(body: unknown, status = 200) {
   return {
@@ -37,7 +46,7 @@ describe("PublicReportView", () => {
       }),
     );
 
-    render(<PublicReportView slug="abc123" />);
+    renderView("abc123");
 
     await waitFor(() => expect(screen.getByRole("heading", { name: "Jane Doe" })).toBeInTheDocument());
     expect(screen.getByText("Blue shirt")).toBeInTheDocument();
@@ -54,7 +63,7 @@ describe("PublicReportView", () => {
     const fetchMock = fetch as unknown as ReturnType<typeof vi.fn>;
     fetchMock.mockResolvedValueOnce(jsonResponse({ detail: "Not found." }, 404));
 
-    render(<PublicReportView slug="missing-slug" />);
+    renderView("missing-slug");
     await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(/not found/i));
   });
 });

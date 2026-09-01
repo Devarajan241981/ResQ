@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RegisterWizard } from "./register-wizard";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { LanguageProvider } from "@/lib/i18n/language-context";
 
 const pushMock = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -20,9 +21,11 @@ function jsonResponse(body: unknown, status = 200) {
 
 function renderWizard() {
   return render(
-    <AuthProvider>
-      <RegisterWizard />
-    </AuthProvider>,
+    <LanguageProvider>
+      <AuthProvider>
+        <RegisterWizard />
+      </AuthProvider>
+    </LanguageProvider>,
   );
 }
 
@@ -60,6 +63,42 @@ describe("RegisterWizard", () => {
 
     expect(screen.getByText("What's your email?")).toBeInTheDocument();
     expect(screen.queryByLabelText("Full name")).not.toBeInTheDocument();
+  });
+
+  it("rejects an invalid phone number and does not advance to the next step", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await user.type(screen.getByLabelText("Full name"), "Asha Kumar");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.type(screen.getByLabelText("Email"), "asha@example.com");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    await user.type(screen.getByLabelText("Phone"), "12345");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent(/valid phone number/i);
+    expect(screen.getByText("What's your phone number?")).toBeInTheDocument();
+  });
+
+  it("auto-prepends +91 to a bare 10-digit number before advancing", async () => {
+    const user = userEvent.setup();
+    renderWizard();
+    await user.type(screen.getByLabelText("Full name"), "Asha Kumar");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.type(screen.getByLabelText("Email"), "asha@example.com");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    await user.type(screen.getByLabelText("Phone"), "9876543210");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    expect(screen.getByText("Choose a password")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Password"), "StrongPass123!");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getByRole("button", { name: "Skip" })); // gender
+    await user.click(screen.getByRole("button", { name: "Skip" })); // city
+    await user.click(screen.getByRole("button", { name: "Skip" })); // blood group
+
+    expect(screen.getByText("+919876543210")).toBeInTheDocument();
   });
 
   it("lets gender/blood group be picked by clicking a card, not typing", async () => {

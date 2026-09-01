@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useLanguage } from "@/lib/i18n/language-context";
 import { extractErrorMessage } from "@/lib/api/client";
 import { getCurrentPosition } from "@/lib/geolocation";
 import type { PaginatedResponse, SOSAlert } from "@/lib/api/types";
 
 export function SosPanel() {
   const { authFetch, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const [activeAlert, setActiveAlert] = useState<SOSAlert | null>(null);
   const [isTriggering, setIsTriggering] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
@@ -56,7 +58,7 @@ export function SosPanel() {
   }
 
   if (!authLoading && !isAuthenticated) {
-    return <p role="alert" className="text-red-600">Log in to use the SOS feature.</p>;
+    return <p role="alert" className="text-red-600">{t("sos.loginRequired")}</p>;
   }
 
   return (
@@ -69,10 +71,8 @@ export function SosPanel() {
 
       {loaded && activeAlert ? (
         <div className="rounded-lg border border-red-500 p-6">
-          <p className="text-lg font-semibold text-red-600">SOS alert is active</p>
-          <p className="mt-1 text-sm text-foreground/70">
-            Your trusted contacts and nearby volunteers have been notified.
-          </p>
+          <p className="text-lg font-semibold text-red-600">{t("sos.alertActive")}</p>
+          <p className="mt-1 text-sm text-foreground/70">{t("sos.notifiedMessage")}</p>
           <div className="mt-4 flex justify-center gap-3">
             <button
               type="button"
@@ -80,7 +80,7 @@ export function SosPanel() {
               onClick={() => handleResolve("resolve")}
               className="rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
             >
-              I&apos;m safe now
+              {t("sos.safeNow")}
             </button>
             <button
               type="button"
@@ -88,7 +88,7 @@ export function SosPanel() {
               onClick={() => handleResolve("cancel")}
               className="rounded-md border border-border px-4 py-2 text-sm disabled:opacity-50"
             >
-              Cancel alert
+              {t("sos.cancelAlert")}
             </button>
           </div>
         </div>
@@ -97,10 +97,10 @@ export function SosPanel() {
           type="button"
           onClick={handleTrigger}
           disabled={isTriggering}
-          aria-label="Trigger SOS emergency alert"
+          aria-label={t("sos.triggerAriaLabel")}
           className="h-40 w-40 rounded-full bg-red-600 text-xl font-bold text-white shadow-lg transition-transform hover:scale-105 disabled:opacity-50"
         >
-          {isTriggering ? "Sending…" : "SOS"}
+          {isTriggering ? t("common.sending") : t("sos.triggerButton")}
         </button>
       )}
     </div>

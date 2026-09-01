@@ -1,7 +1,7 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
@@ -12,13 +12,14 @@ from apps.missing_persons.serializers import (
     MissingPersonReportSerializer,
     MissingPersonStatusUpdateSerializer,
     PublicMissingPersonSerializer,
+    ReportCommentSerializer,
     SightingReportSerializer,
 )
 
 
 class MissingPersonReportViewSet(viewsets.ModelViewSet):
     serializer_class = MissingPersonReportSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["status", "gender"]
     throttle_scope = "report-create"
@@ -31,7 +32,17 @@ class MissingPersonReportViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated(), IsVerifiedReporter()]
         if self.action in ("update", "partial_update", "destroy", "update_status"):
             return [permissions.IsAuthenticated(), IsOwnerOrReadOnly()]
+        if self.action == "list" or (self.action == "comments" and self.request.method == "GET"):
+            # The feed is a public surface — anyone can browse and read comments.
+            return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            # The feed always uses the reduced PII-safe shape, even for
+            # authenticated users: emergency contact numbers stay private.
+            return PublicMissingPersonSerializer
+        return super().get_serializer_class()
 
     def get_throttles(self):
         if self.action == "create":
@@ -67,6 +78,16 @@ class MissingPersonReportViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         sighting = services.add_sighting(report, request.user, serializer.validated_data)
         return Response(SightingReportSerializer(sighting).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["get", "post"], url_path="comments")
+    def comments(self, request, pk=None):
+        report = self.get_object()
+        if request.method == "GET":
+            return Response(ReportCommentSerializer(report.comments.select_related("author"), many=True).data)
+        serializer = ReportCommentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        comment = services.add_comment(report, request.user, serializer.validated_data["content"])
+        return Response(ReportCommentSerializer(comment).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["patch"], url_path="status")
     def update_status(self, request, pk=None):
