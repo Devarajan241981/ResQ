@@ -164,8 +164,8 @@ def test_comments_public_read_authenticated_write(api_client, user, make_auth_cl
 
 def test_sighting_notifies_the_reporter(user, django_capture_on_commit_callbacks):
     from apps.accounts.tests.factories import UserFactory
-    from apps.notifications.models import Notification
     from apps.missing_persons import services
+    from apps.notifications.models import Notification
 
     report = _make_report(user)
     spotter = UserFactory()
